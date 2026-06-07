@@ -27,13 +27,30 @@ const STEPS = [
 
 export default function HowItWorksSection() {
   return (
-    <section
-      className="py-28 px-6"
-      style={{
-        background: 'linear-gradient(180deg, #0A0812 0%, #0C0A18 100%)',
-      }}
-    >
-      <div className="section-container">
+    <section className="relative py-28 px-6 overflow-hidden">
+      {/* Background video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ zIndex: 0 }}
+      >
+        <source src="/videos/howitworks-bg.webm" type="video/webm" />
+        <source src="/videos/howitworks-bg.mp4" type="video/mp4" />
+      </video>
+
+      {/* Overlay */}
+      <div
+        className="absolute inset-0"
+        style={{
+          zIndex: 1,
+          background: 'linear-gradient(to bottom, rgba(10,8,18,0.78) 0%, rgba(10,8,18,0.85) 100%)',
+        }}
+      />
+
+      <div className="relative section-container" style={{ zIndex: 2 }}>
         {/* Heading */}
         <motion.div
           className="mb-16"
@@ -81,7 +98,7 @@ export default function HowItWorksSection() {
             </motion.div>
           ))}
         </div>
-      </div>
+      </div>{/* /section-container */}
     </section>
   )
 }

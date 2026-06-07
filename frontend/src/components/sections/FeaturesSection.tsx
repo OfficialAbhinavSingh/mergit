@@ -155,7 +155,7 @@ export default function FeaturesSection() {
             </motion.div>
           ))}
         </div>
-      </div>
+      </div>{/* /section-container */}
     </section>
   )
 }
