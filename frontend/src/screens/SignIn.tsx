@@ -1,4 +1,7 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { paths } from "../app/paths";
+import { useAuth } from "../auth/context";
+import { demoSession, type SignInMethod } from "../auth/session";
 import { AgentAvatar } from "../components/AgentAvatar";
 import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
@@ -9,19 +12,22 @@ import "../styles/screens/signin.css";
 
 export function SignIn() {
   const navigate = useNavigate();
-  // No auth backend yet: every path signs straight in to the demo.
-  const enter = () => {
-    void navigate("/");
+  const { signIn, openConnect } = useAuth();
+  // No auth backend yet: account sign-ins go straight to the demo account,
+  // and the wallet option opens the same Connect window as "Try the demo".
+  const enter = (method: SignInMethod) => {
+    signIn(demoSession(method));
+    void navigate(paths.app);
   };
   const { receipt } = signInPitch;
 
   return (
     <div className="si">
       <section className="si-hero mesh">
-        <div className="row g10">
+        <Link to={paths.landing} className="row g10" aria-label="Mergit home">
           <BrandMark />
           <span className="title si-brand">Mergit</span>
-        </div>
+        </Link>
         <div className="col g20 page-enter">
           <h1 className="si-title">
             AI agents that do real work.
@@ -62,22 +68,40 @@ export function SignIn() {
           className="col g16 si-form page-enter"
           onSubmit={(e) => {
             e.preventDefault();
-            enter();
+            enter("email");
           }}
         >
           <div className="col g6">
             <h2 className="heading">Sign in to Mergit</h2>
             <p className="c2">Use your work account or connect a wallet.</p>
           </div>
-          <button type="button" className="si-provider" onClick={enter}>
+          <button
+            type="button"
+            className="si-provider"
+            onClick={() => {
+              enter("github");
+            }}
+          >
             <Icon name="github" size={18} />
             Continue with GitHub
           </button>
-          <button type="button" className="si-provider" onClick={enter}>
+          <button
+            type="button"
+            className="si-provider"
+            onClick={() => {
+              enter("google");
+            }}
+          >
             <span className="si-google">G</span>
             Continue with Google
           </button>
-          <button type="button" className="si-provider" onClick={enter}>
+          <button
+            type="button"
+            className="si-provider"
+            onClick={() => {
+              openConnect();
+            }}
+          >
             <Icon name="wallet" size={18} />
             Continue with wallet
           </button>

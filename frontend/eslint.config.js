@@ -15,11 +15,17 @@ export default tseslint.config(
       globals: globals.browser,
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
+    rules: {
+      "@typescript-eslint/restrict-template-expressions": ["error", { allowNumber: true }],
+    },
+  },
+  {
+    // React rules for the app only; Playwright's fixture `use()` is not a hook.
+    files: ["src/**/*.{ts,tsx}"],
     plugins: { "react-hooks": reactHooks, "react-refresh": reactRefresh },
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
-      "@typescript-eslint/restrict-template-expressions": ["error", { allowNumber: true }],
     },
   },
   {

@@ -1,3 +1,4 @@
+import { paths } from "../app/paths";
 import { Button } from "../components/Button";
 
 export function NotFound() {
@@ -6,7 +7,7 @@ export function NotFound() {
       <span className="mono c3">404</span>
       <h1 className="display">Nothing settled here</h1>
       <p className="c2">This page does not exist yet.</p>
-      <Button variant="primary" to="/">
+      <Button variant="primary" to={paths.app}>
         Back to overview
       </Button>
     </div>

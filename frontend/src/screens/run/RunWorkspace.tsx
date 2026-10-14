@@ -1,3 +1,4 @@
+import { paths } from "../../app/paths";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { AgentAvatar } from "../../components/AgentAvatar";
@@ -43,7 +44,7 @@ export function RunWorkspace() {
             Share
           </Button>
           {run.id === runDetail.id && <Button icon="external">Open {runDetail.pr}</Button>}
-          <Button variant="primary" icon="rerun" to="/runs/new">
+          <Button variant="primary" icon="rerun" to={paths.newRun}>
             Rerun
           </Button>
         </>
@@ -63,7 +64,7 @@ export function RunWorkspace() {
           <p className="c2">
             The task graph, live log and receipts for {run.id} load from the runtime API, which is not connected yet.
           </p>
-          <Button to={`/runs/${runDetail.id}`}>Open the {runDetail.id} demo trace</Button>
+          <Button to={paths.run(runDetail.id)}>Open the {runDetail.id} demo trace</Button>
         </section>
       </>
     );

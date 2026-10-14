@@ -1,4 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
+import type { Page } from "@playwright/test";
+import { seedSession } from "./fixtures";
 
 const LIGHT_CANVAS = "rgb(244, 245, 247)";
 const DARK_CANVAS = "rgb(11, 12, 15)";
@@ -21,6 +23,7 @@ async function settle(page: Page) {
 test.describe("first paint", () => {
   test("follows a dark OS before the app script runs", async ({ browser }) => {
     const ctx = await browser.newContext({ colorScheme: "dark" });
+    await seedSession(ctx);
     const page = await ctx.newPage();
     // Record the theme at the moment the boot script finishes, before React mounts.
     await page.addInitScript(() => {
@@ -28,7 +31,7 @@ test.describe("first paint", () => {
         (window as unknown as { __firstTheme?: string }).__firstTheme = document.documentElement.dataset.theme;
       });
     });
-    await page.goto("/");
+    await page.goto("/app");
     expect(await page.evaluate(() => (window as unknown as { __firstTheme?: string }).__firstTheme)).toBe("dark");
     expect(await canvasOf(page)).toBe(DARK_CANVAS);
     await ctx.close();
@@ -36,11 +39,12 @@ test.describe("first paint", () => {
 
   test("a saved choice beats the OS setting", async ({ browser }) => {
     const ctx = await browser.newContext({ colorScheme: "dark" });
+    await seedSession(ctx);
     await ctx.addInitScript(() => {
       localStorage.setItem("mergit-theme", "light");
     });
     const page = await ctx.newPage();
-    await page.goto("/");
+    await page.goto("/app");
     expect(await themeOf(page)).toBe("light");
     expect(await canvasOf(page)).toBe(LIGHT_CANVAS);
     await ctx.close();
@@ -51,7 +55,7 @@ test.describe("toggle", () => {
   test.use({ colorScheme: "light" });
 
   test("switches theme, swaps the icon label and survives a reload", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/app");
     await expect(toggle(page)).toHaveAccessibleName("Switch to dark mode");
     await toggle(page).click();
     await settle(page);
@@ -66,7 +70,7 @@ test.describe("toggle", () => {
   });
 
   test("picking the OS theme again clears the override", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/app");
     await toggle(page).click();
     await settle(page);
     expect(await stored(page)).toBe("dark");
@@ -78,8 +82,9 @@ test.describe("toggle", () => {
 
   test("works with reduced motion and does not start a view transition", async ({ browser }) => {
     const ctx = await browser.newContext({ colorScheme: "light", reducedMotion: "reduce" });
+    await seedSession(ctx);
     const page = await ctx.newPage();
-    await page.goto("/");
+    await page.goto("/app");
     await page.evaluate(() => {
       const w = window as unknown as { __vt: number };
       w.__vt = 0;
@@ -106,10 +111,11 @@ test.describe("toggle", () => {
 test.describe("sync", () => {
   test("a switch in one tab updates every other open tab", async ({ browser }) => {
     const ctx = await browser.newContext({ colorScheme: "light" });
+    await seedSession(ctx);
     const a = await ctx.newPage();
     const b = await ctx.newPage();
-    await a.goto("/");
-    await b.goto("/agents");
+    await a.goto("/app");
+    await b.goto("/app/agents");
     await toggle(a).click();
     await expect.poll(() => themeOf(b)).toBe("dark");
     await settle(b);
@@ -123,7 +129,7 @@ test.describe("sync", () => {
 
   test("follows the OS live until the user picks a theme", async ({ page }) => {
     await page.emulateMedia({ colorScheme: "light" });
-    await page.goto("/");
+    await page.goto("/app");
     expect(await themeOf(page)).toBe("light");
 
     await page.emulateMedia({ colorScheme: "dark" });
