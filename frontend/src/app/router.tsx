@@ -2,7 +2,7 @@ import { Navigate, createBrowserRouter } from "react-router-dom";
 import { RequireSession } from "../auth/RequireSession";
 import { AppShell } from "../components/AppShell";
 import { LandingPage } from "../landing/LandingPage";
-import { proof, runDetail } from "../mock/data";
+import { runDetail } from "../mock/data";
 import { Agents } from "../screens/agents/Agents";
 import { Integrations } from "../screens/Integrations";
 import { Leaderboard } from "../screens/Leaderboard";
@@ -10,6 +10,7 @@ import { NewRun } from "../screens/NewRun";
 import { NotFound } from "../screens/NotFound";
 import { Overview } from "../screens/Overview";
 import { ProofDetail } from "../screens/ProofDetail";
+import { ProofLedger } from "../screens/proofs/ProofLedger";
 import { RunWorkspace } from "../screens/run/RunWorkspace";
 import { SignIn } from "../screens/SignIn";
 import { Wallet } from "../screens/Wallet";
@@ -39,7 +40,7 @@ export const router = createBrowserRouter([
           { path: "runs/new", element: <NewRun /> },
           { path: "runs/:runId", element: <RunWorkspace /> },
           { path: "agents", element: <Agents /> },
-          { path: "proofs", element: <Navigate to={paths.proof(proof.id)} replace /> },
+          { path: "proofs", element: <ProofLedger /> },
           { path: "proofs/:proofId", element: <ProofDetail /> },
           { path: "leaderboard", element: <Leaderboard /> },
           { path: "integrations", element: <Integrations /> },
