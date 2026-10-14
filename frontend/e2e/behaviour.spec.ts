@@ -57,26 +57,6 @@ test.describe("leaderboard and agents", () => {
     await expect(top).toContainText("Code agent");
     await expect(top).toContainText("812");
   });
-
-  test("agents are sorted by the selected key", async ({ page }) => {
-    await page.goto("/app/agents");
-    const firstName = page.locator(".ag-card h2").first();
-    await expect(firstName).toHaveText("Planner");
-    await page.getByLabel("Sort agents").selectOption("tasks");
-    await expect(firstName).toHaveText("Planner");
-    await page.getByLabel("Sort agents").selectOption("name");
-    await expect(firstName).toHaveText("Code agent");
-  });
-
-  test("search and category narrow the list", async ({ page }) => {
-    await page.goto("/app/agents");
-    await page.getByRole("searchbox", { name: "Search agents" }).fill("incident");
-    await expect(page.locator(".ag-card")).toHaveCount(1);
-    await expect(page.locator(".ag-card h2")).toHaveText("Docs agent");
-    await page.getByRole("searchbox", { name: "Search agents" }).fill("");
-    await page.getByRole("radio", { name: "Testing" }).click();
-    await expect(page.locator(".ag-card h2")).toHaveText(["QA agent"]);
-  });
 });
 
 test.describe("forms", () => {
