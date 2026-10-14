@@ -159,7 +159,8 @@ export type LogEntry = { t: string; agent: AgentKind; tool: string; detail: stri
 export const runDetail = {
   id: "RUN-2048",
   title: "Fix authentication bug",
-  summary: "Started 12m ago from Slack #backend by Priya N. 6 tasks, 3 in parallel, 2m 14s.",
+  /** Followed by the elapsed time, which counts up while the trace plays. */
+  summaryLead: "Started 12m ago from Slack #backend by Priya N. 6 tasks, 3 in parallel",
   seconds: 134,
   plannedIn: "3s",
   /** The log streams every event; the card shows the latest few. */
