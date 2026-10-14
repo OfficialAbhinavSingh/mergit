@@ -1,6 +1,7 @@
 import { Navigate, createBrowserRouter } from "react-router-dom";
 import { RequireSession } from "../auth/RequireSession";
 import { AppShell } from "../components/AppShell";
+import { LandingPage } from "../landing/LandingPage";
 import { proof, runDetail } from "../mock/data";
 import { Agents } from "../screens/Agents";
 import { Integrations } from "../screens/Integrations";
@@ -23,8 +24,7 @@ export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      // The landing page arrives in the next commit; until then the root opens the dashboard.
-      { path: paths.landing, element: <Navigate to={paths.app} replace /> },
+      { path: paths.landing, element: <LandingPage /> },
       { path: paths.signIn, element: <SignIn /> },
       {
         path: paths.app,
