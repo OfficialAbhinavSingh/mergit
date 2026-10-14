@@ -185,20 +185,6 @@
     box-shadow: 0 0 0 7px transparent;
   }
 }
-.caret {
-  display: inline-block;
-  width: 2px;
-  height: 1em;
-  margin-left: 2px;
-  vertical-align: -0.15em;
-  background: currentColor;
-  animation: caret 0.9s steps(1) infinite;
-}
-@keyframes caret {
-  50% {
-    opacity: 0;
-  }
-}
 
 /* Scroll reveal: elements blur and rise in once their section is in view. */
 .l-reveal {

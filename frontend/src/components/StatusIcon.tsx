@@ -15,7 +15,7 @@ export function StatusIcon({ status, size = 16 }: { status: Status; size?: numbe
   const { name, color, label } = ICON[status];
   return (
     <span className="row" role="img" aria-label={label}>
-      <Icon name={name} size={size} color={color} stroke={2} />
+      <Icon name={name} size={size} color={color} stroke={2} className={status === "Running" ? "spin" : undefined} />
     </span>
   );
 }

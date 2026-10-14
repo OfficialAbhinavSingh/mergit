@@ -106,7 +106,7 @@
   background: var(--gray-wash);
   color: var(--ink2);
 }
-.b-run svg.spin {
+svg.spin {
   animation: spin 1.1s linear infinite;
 }
 @keyframes spin {
@@ -511,9 +511,6 @@ button.link {
 .cells > * + * {
   border-left: 1px solid var(--border);
 }
-.cells > .wide {
-  flex: 1.6;
-}
 
 .empty {
   padding: 20px;
@@ -531,24 +528,18 @@ button.link {
   min-height: 54px;
 }
 
-/* A native select dressed as an outline chip. */
-.select-chip {
-  position: relative;
-  padding-right: 10px;
+/* Typing caret, used wherever text types itself out. */
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: currentColor;
+  animation: caret 0.9s steps(1) infinite;
 }
-.select-chip select {
-  appearance: none;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  padding-right: 2px;
-}
-.select-chip:focus-within {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
-.select-chip select:focus-visible {
-  outline: none;
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
 }
