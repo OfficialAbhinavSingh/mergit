@@ -93,7 +93,7 @@ export function FlowGraph({
               <button
                 key={task.key}
                 type="button"
-                className={`dnode rise${task.key === selected ? " sel" : ""}`}
+                className={`dnode rise${task.key === selected ? " sel" : ""}${task.status === "Running" ? " running" : ""}`}
                 style={stagger(i, { left: x, top: y })}
                 aria-pressed={task.key === selected}
                 onClick={() => {
