@@ -1,25 +1,36 @@
 import { useId, useState } from "react";
 import { useCountUp } from "../../hooks/useCountUp";
+import { useWidth } from "../../hooks/useWidth";
 
 /* ---------- Area chart: two series with a hover crosshair ---------- */
 
-const W = 1120;
-const H = 228;
+/**
+ * The design's plot, scaled to fit its card. Below NARROW the scaled labels get
+ * too small to read, so the chart redraws at its real width and PHONE_H tall.
+ */
+const DESIGN = { width: 1120, height: 228 };
+const NARROW = 600;
+const PHONE_H = 160;
 const PAD = { left: 26, right: 0, top: 6, bottom: 22 };
 const MAX = 120;
 
-function pathFor(values: number[]) {
-  const step = (W - PAD.left - PAD.right) / (values.length - 1);
-  return values.map((v, i) => [PAD.left + i * step, PAD.top + (1 - v / MAX) * (H - PAD.top - PAD.bottom)] as const);
-}
-const line = (pts: readonly (readonly [number, number])[]) =>
+type Pt = readonly [x: number, y: number];
+const line = (pts: readonly Pt[]) =>
   pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
-const area = (pts: readonly (readonly [number, number])[]) =>
-  `${line(pts)} L${String(W - PAD.right)} ${String(H - PAD.bottom)} L${String(PAD.left)} ${String(H - PAD.bottom)} Z`;
 
 export function RunsChart({ labels, runs, proofs }: { labels: string[]; runs: number[]; proofs: number[] }) {
   const id = useId();
   const [hover, setHover] = useState<number | null>(null);
+  const [ref, measured] = useWidth<HTMLDivElement>(DESIGN.width);
+  const narrow = measured < NARROW;
+  const W = narrow ? measured : DESIGN.width;
+  const H = narrow ? PHONE_H : DESIGN.height;
+  const pathFor = (values: number[]) => {
+    const gap = (W - PAD.left - PAD.right) / (values.length - 1);
+    return values.map((v, i): Pt => [PAD.left + i * gap, PAD.top + (1 - v / MAX) * (H - PAD.top - PAD.bottom)]);
+  };
+  const area = (pts: readonly Pt[]) =>
+    `${line(pts)} L${String(W - PAD.right)} ${String(H - PAD.bottom)} L${String(PAD.left)} ${String(H - PAD.bottom)} Z`;
   const a = pathFor(runs);
   const b = pathFor(proofs);
   const step = (W - PAD.left - PAD.right) / (runs.length - 1);
@@ -34,7 +45,7 @@ export function RunsChart({ labels, runs, proofs }: { labels: string[]; runs: nu
   const pb = hover === null ? undefined : b[hover];
 
   return (
-    <div className="pl-chart">
+    <div className="pl-chart" ref={ref}>
       <svg
         viewBox={`0 0 ${String(W)} ${String(H)}`}
         role="img"

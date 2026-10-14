@@ -71,6 +71,13 @@ test.describe("proof ledger", () => {
     await expect(page.locator(".pl-tip")).toContainText(/Proofs settled \d+/);
   });
 
+  test("the runs chart redraws at phone width with readable labels", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.goto("/app/proofs");
+    const label = await page.locator(".pl-axis").first().boundingBox();
+    expect(label?.height).toBeGreaterThan(9);
+  });
+
   test("the block number keeps ticking", async ({ page }) => {
     await page.goto("/app/proofs");
     const block = page.locator(".pl-block");
