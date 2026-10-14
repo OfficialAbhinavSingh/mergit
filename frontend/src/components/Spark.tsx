@@ -1,14 +1,19 @@
-/** Small trend line with a soft fill and an end dot, as drawn in the design. */
+/**
+ * Small trend line. The dashboard cards draw it with a soft fill and an end
+ * dot; `plain` gives the bare line used on the proof ledger.
+ */
 export function Spark({
   points,
   color = "var(--azure)",
   width = 96,
   height = 36,
+  plain = false,
 }: {
   points: number[];
   color?: string;
   width?: number;
   height?: number;
+  plain?: boolean;
 }) {
   if (points.length === 0) return null;
   const max = Math.max(...points);
@@ -32,9 +37,9 @@ export function Spark({
       fill="none"
       aria-hidden="true"
     >
-      <path d={`${d} L${width} ${height} L0 ${height} Z`} fill={color} fillOpacity={0.08} />
+      {!plain && <path d={`${d} L${width} ${height} L0 ${height} Z`} fill={color} fillOpacity={0.08} />}
       <path d={d} stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={endX - 2} cy={endY} r={3} fill={color} stroke="var(--surface)" strokeWidth={2} />
+      {!plain && <circle cx={endX - 2} cy={endY} r={3} fill={color} stroke="var(--surface)" strokeWidth={2} />}
     </svg>
   );
 }
