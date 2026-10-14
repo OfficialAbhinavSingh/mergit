@@ -1,3 +1,4 @@
+import { paths } from "../app/paths";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AgentAvatar } from "../components/AgentAvatar";
@@ -32,7 +33,7 @@ export function NewRun() {
     if (!prompt.trim()) return;
     // No runtime yet: open the demo trace instead of a run built from this prompt.
     toast(`Demo mode: opening ${runDetail.id}`);
-    void navigate(`/runs/${runDetail.id}`);
+    void navigate(paths.run(runDetail.id));
   };
 
   return (

@@ -1,14 +1,14 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 const ROUTES: [string, string, string | null][] = [
-  ["/", "Good morning, Alex", "Overview"],
-  ["/runs/RUN-2048", "Fix authentication bug", "Runs"],
-  ["/runs/new", "Describe the outcome, not the steps", "Runs"],
-  ["/agents", "Agents", "Agents"],
-  ["/proofs/1840", "Work proof", "Proofs"],
-  ["/leaderboard", "Leaderboard", "Leaderboard"],
-  ["/integrations", "Integrations", "Integrations"],
-  ["/wallet", "Wallet and identity", null],
+  ["/app", "Good morning, Alex", "Overview"],
+  ["/app/runs/RUN-2048", "Fix authentication bug", "Runs"],
+  ["/app/runs/new", "Describe the outcome, not the steps", "Runs"],
+  ["/app/agents", "Agents", "Agents"],
+  ["/app/proofs/1840", "Work proof", "Proofs"],
+  ["/app/leaderboard", "Leaderboard", "Leaderboard"],
+  ["/app/integrations", "Integrations", "Integrations"],
+  ["/app/wallet", "Wallet and identity", null],
   ["/signin", "AI agents that do real work.", null],
 ];
 
@@ -32,14 +32,22 @@ for (const theme of ["light", "dark"] as const) {
 }
 
 test("short paths redirect to their detail pages", async ({ page }) => {
-  await page.goto("/runs");
+  await page.goto("/app/runs");
   await expect(page).toHaveURL(/\/runs\/RUN-2048$/);
-  await page.goto("/proofs");
+  await page.goto("/app/proofs");
   await expect(page).toHaveURL(/\/proofs\/1840$/);
 });
 
 test("design copy uses the current protocol terms", async ({ page }) => {
-  for (const path of ["/", "/runs/RUN-2048", "/proofs/1840", "/wallet", "/agents", "/leaderboard"]) {
+  for (const path of [
+    "/",
+    "/app",
+    "/app/runs/RUN-2048",
+    "/app/proofs/1840",
+    "/app/wallet",
+    "/app/agents",
+    "/app/leaderboard",
+  ]) {
     await page.goto(path);
     const text = await page.locator("body").innerText();
     expect(text, path).not.toMatch(/Monad|AgentPassport|ProofOfWork|proof of work|passport/i);
@@ -49,7 +57,7 @@ test("design copy uses the current protocol terms", async ({ page }) => {
 });
 
 test("run filters and approvals respond", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/app");
   await page.getByRole("radio", { name: "Failed" }).click();
   await expect(page.getByRole("link", { name: /Code review for PR #134/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Fix authentication bug/ })).toHaveCount(0);
@@ -59,13 +67,13 @@ test("run filters and approvals respond", async ({ page }) => {
 });
 
 test("selecting a flow node updates the side panel", async ({ page }) => {
-  await page.goto("/runs/RUN-2048");
+  await page.goto("/app/runs/RUN-2048");
   await page.getByRole("button", { name: /Coder Patched session check/ }).click();
   await expect(page.getByRole("heading", { name: "Code agent" })).toBeVisible();
 });
 
 test("segmented controls follow the radio-group keyboard pattern", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/app");
   const all = page.getByRole("radio", { name: "All" });
   await all.focus();
   await page.keyboard.press("ArrowRight");
@@ -77,7 +85,7 @@ test("segmented controls follow the radio-group keyboard pattern", async ({ page
 });
 
 test("buttons without a backend say so instead of doing nothing", async ({ page }) => {
-  await page.goto("/wallet");
+  await page.goto("/app/wallet");
   await page.getByRole("button", { name: "Fund wallet" }).click();
   await expect(page.getByRole("status")).toHaveText("Needs the backend, not wired up yet");
 });

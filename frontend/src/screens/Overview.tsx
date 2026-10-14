@@ -1,3 +1,4 @@
+import { paths } from "../app/paths";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AgentAvatar, AvatarStack } from "../components/AgentAvatar";
@@ -42,7 +43,7 @@ export function Overview() {
         actions={
           <>
             <Button icon="clock">Last 7 days</Button>
-            <Button variant="primary" icon="plus" to="/runs/new">
+            <Button variant="primary" icon="plus" to={paths.newRun}>
               New run
             </Button>
           </>
@@ -53,7 +54,7 @@ export function Overview() {
         <div className="card pad24 col between mesh ov-stat">
           <div className="row between">
             <Badge status="Verified" label="Verified receipts" />
-            <Link to="/wallet" className="link">
+            <Link to={paths.wallet} className="link">
               Open ledger <Icon name="arrowUp" size={14} />
             </Link>
           </div>
@@ -109,7 +110,7 @@ export function Overview() {
           </div>
           <div className="scroll">
             {visible.map((r, i) => (
-              <Link key={`${filter}-${r.id}`} to={`/runs/${r.id}`} className="tr rise" style={stagger(i)}>
+              <Link key={`${filter}-${r.id}`} to={paths.run(r.id)} className="tr rise" style={stagger(i)}>
                 <div className="col grow">
                   <span className="strong ellipsis">{r.title}</span>
                   <span className="small c3">
