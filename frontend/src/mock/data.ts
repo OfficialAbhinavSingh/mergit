@@ -320,7 +320,7 @@ export const runDetail = {
 
 /* ---------- Agents and leaderboard ---------- */
 
-export const AGENT_CATEGORIES = ["Coding", "Research", "Testing", "Writing"] as const;
+const AGENT_CATEGORIES = ["Coding", "Research", "Testing", "Writing"] as const;
 /** Category filter options for the agent screens. */
 export const CATEGORY_FILTERS = ["All", ...AGENT_CATEGORIES] as const;
 export type CategoryFilter = (typeof CATEGORY_FILTERS)[number];

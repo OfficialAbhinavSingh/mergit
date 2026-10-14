@@ -16,6 +16,7 @@ import "./styles/motion.css";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { ToastProvider } from "./toast/ToastProvider";
 import { ApprovalsProvider } from "./state/ApprovalsProvider";
+import { TeamProvider } from "./state/TeamProvider";
 import { router } from "./app/router";
 
 const root = document.getElementById("root");
@@ -26,7 +27,9 @@ createRoot(root).render(
     <ThemeProvider>
       <ToastProvider>
         <ApprovalsProvider>
-          <RouterProvider router={router} />
+          <TeamProvider>
+            <RouterProvider router={router} />
+          </TeamProvider>
         </ApprovalsProvider>
       </ToastProvider>
     </ThemeProvider>

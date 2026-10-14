@@ -3,7 +3,7 @@ import { RequireSession } from "../auth/RequireSession";
 import { AppShell } from "../components/AppShell";
 import { LandingPage } from "../landing/LandingPage";
 import { proof, runDetail } from "../mock/data";
-import { Agents } from "../screens/Agents";
+import { Agents } from "../screens/agents/Agents";
 import { Integrations } from "../screens/Integrations";
 import { Leaderboard } from "../screens/Leaderboard";
 import { NewRun } from "../screens/NewRun";
@@ -17,8 +17,8 @@ import { paths } from "./paths";
 import { RootLayout } from "./RootLayout";
 
 /**
- * `/` is the landing page and `/app` the dashboard. The design has no runs or
- * proofs list screens, so those tabs open the demo run and proof directly.
+ * `/` is the landing page and `/app` the dashboard. The design has no runs list
+ * screen, so that tab opens the demo run directly.
  */
 export const router = createBrowserRouter([
   {
