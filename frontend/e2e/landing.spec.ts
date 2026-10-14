@@ -108,7 +108,13 @@ test.describe("sign in", () => {
     await page.goto("/app");
     await page.getByRole("button", { name: /Account/ }).click();
     await page.getByRole("menuitem", { name: "Sign out" }).click();
+    // The brand splash covers the dashboard first, then hands over to the landing page.
+    const splash = page.getByRole("status", { name: "Signing out" });
+    await expect(splash).toBeVisible();
+    await expect(splash).toContainText("Real work. Verifiable proof.");
+    await expect(page).toHaveURL(/\/app$/);
     await expect(page).toHaveURL(/\/$/);
+    await expect(splash).toHaveCount(0);
     expect(await session(page)).toBeNull();
     await page.goto("/app");
     await expect(page.getByRole("dialog", { name: "Connect to Mergit" })).toBeVisible();
