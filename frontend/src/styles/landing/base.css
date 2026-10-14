@@ -15,10 +15,6 @@
   line-height: 1.5;
   overflow-x: clip;
 }
-.landing a {
-  color: inherit;
-}
-
 .l-container {
   width: min(calc(1626 * var(--u)), calc(100% - 32px));
   margin-inline: auto;

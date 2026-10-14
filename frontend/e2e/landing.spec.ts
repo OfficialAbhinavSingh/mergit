@@ -134,7 +134,23 @@ test.describe("sign in", () => {
       );
     });
     await page.goto("/");
-    await page.getByRole("link", { name: /Open dashboard/ }).click();
+    const open = page.getByRole("link", { name: /Open dashboard/ });
+    // The label must not take the pill's own colour.
+    const [color, background] = await open.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return [style.color, style.backgroundColor];
+    });
+    expect(color).not.toBe(background);
+    await open.click();
     await expect(page).toHaveURL(/\/app$/);
+  });
+
+  test("the Connect window fits a phone screen", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Try the demo" }).first().click();
+    const box = await page.getByRole("dialog").boundingBox();
+    expect(box?.x).toBeGreaterThanOrEqual(0);
+    expect((box?.x ?? 0) + (box?.width ?? Infinity)).toBeLessThanOrEqual(390);
   });
 });

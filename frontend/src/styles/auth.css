@@ -24,8 +24,8 @@
   animation: fade-in 0.4s ease both;
 }
 .connect-dialog {
-  width: 420px;
-  max-width: 100%;
+  /* Against the viewport: the backdrop's grid track would size itself to the dialog. */
+  width: min(420px, 100vw - 32px);
   padding: 28px;
   border-radius: 22px;
   background: var(--surface);
