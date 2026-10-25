@@ -29,6 +29,7 @@
 13. [Architecture-level risks](#13-architecture-level-risks)
 14. [Known inconsistencies in the current documents](#14-known-inconsistencies-in-the-current-documents)
 15. [Glossary](#15-glossary)
+16. [Orchestrator implementation track](#16-orchestrator-implementation-track)
 - [Appendix A — Traceability](#appendix-a--traceability)
 - [Appendix B — Invariants and where they are enforced](#appendix-b--invariants-and-where-they-are-enforced)
 
@@ -62,43 +63,7 @@ measure and when, not what to expect.
 
 ## 2. System context
 
-```mermaid
-flowchart LR
-    REQ["Requester<br/>developer, team,<br/>or orchestrating agent"]
-    OPR["Agent operator"]
-    CHL["Challenger<br/>any bonded party"]
-
-    subgraph MERGIT["Mergit"]
-        WEB["Web app and API"]
-        CP["Control plane"]
-        RT["Attested runtime"]
-        EV["Evidence services"]
-        REP["Reputation and routing"]
-    end
-
-    L2[("Ethereum L2<br/>contracts")]
-    TEEV["TEE vendor<br/>root of trust"]
-    LLM["LLM providers"]
-    TGT["Tool targets<br/>Git hosts, CI,<br/>package registries, APIs"]
-    PAY["Payment rail<br/>stablecoin,<br/>x402-compatible"]
-
-    REQ --> WEB
-    OPR --> WEB
-    WEB --> CP
-    CP --> RT
-    RT --> EV
-    EV --> L2
-    CP --> L2
-    REP --> CP
-    CHL --> L2
-    CHL --> EV
-    RT -. attestation .-> TEEV
-    EV -. verifies quotes .-> TEEV
-    RT --> LLM
-    RT --> TGT
-    REQ --> PAY
-    PAY --> L2
-```
+![System context](diagrams/hld/01-system-context.png)
 
 **What is inside Mergit:** the control plane, the attested runtime, the evidence services, the
 reputation and routing logic, the web app and API, and the contracts it deploys.
@@ -176,26 +141,7 @@ something outside its column is a design error to raise, not a feature to add.
 
 ## 4. Logical architecture
 
-```mermaid
-flowchart TB
-    EXP["<b>Experience</b><br/>C1 Web app<br/>C2 Public API and events<br/>C3 Verifier library and CLI"]
-    CTL["<b>Control plane</b><br/>C4 Task service, C5 Predicate service<br/>C6 Tier and quota, C7 Router<br/>C8 Accounts and auth, C9 Agent registry"]
-    EXE["<b>Execution (trusted computing base)</b><br/>C10 Runtime scheduler<br/>C11 Enclave: harness, tool broker, meter,<br/>receipt builder and signer<br/>C12 LLM gateway, C13 Tool adapters"]
-    EVD["<b>Evidence</b><br/>C14 Receipt store and disclosure<br/>C15 Attestation verifier<br/>C16 Validator service, C17 Adjudication"]
-    SET["<b>Settlement</b><br/>C18 Contracts<br/>C19 Chain gateway, C20 Indexer"]
-    INT["<b>Intelligence</b><br/>C21 Reputation engine<br/>C22 Subsidy ledger"]
-    PLT["<b>Platform</b><br/>C23 Key management<br/>C24 Image build and measurement<br/>C25 Observability"]
-
-    EXP -->|submit, inspect| CTL
-    CTL -->|dispatch| EXE
-    EXE -->|signed receipt| EVD
-    CTL -->|escrow, stake| SET
-    EVD -->|commitments, verdicts| SET
-    SET -->|validated outcomes| INT
-    INT -->|posteriors| CTL
-    EXP -.->|verifies without trusting the platform| EVD
-    PLT -.->|keys, measured image| EXE
-```
+![Logical architecture](diagrams/hld/02-logical-architecture.png)
 
 ### 4.1 Component catalogue
 
@@ -245,32 +191,7 @@ Twenty-five components do not mean twenty-five services.
 
 ## 5. Trust boundaries and keys
 
-```mermaid
-flowchart LR
-    subgraph Z0["Zone 0: untrusted"]
-        AG["Agent code and model output"]
-    end
-    subgraph Z1["Zone 1: attested runtime (TCB)"]
-        SB["Sandbox"]
-        BR["Tool broker, meter,<br/>receipt builder, signer"]
-    end
-    subgraph Z2["Zone 2: platform"]
-        CP2["Control plane,<br/>evidence services,<br/>reputation"]
-    end
-    subgraph Z3["Zone 3: chain"]
-        CT["Contracts"]
-    end
-    subgraph Z4["Zone 4: outside"]
-        EXT["LLM providers, tool targets,<br/>TEE vendor"]
-    end
-
-    AG --> SB
-    SB --> BR
-    BR -->|signed receipt| CP2
-    CP2 -->|commitments, escrow, verdicts| CT
-    BR --> EXT
-    CT -. public, checkable by anyone .-> CP2
-```
+![Trust boundaries and keys](diagrams/hld/03-trust-zones-and-keys.png)
 
 **Zone 0 is hostile.** The agent's code, its tool arguments and its prose are all untrusted input to
 the runtime. The agent cannot sign a receipt (paper §5.1, A1), and a second isolation boundary
@@ -331,24 +252,7 @@ the discarded prototype was weakest, and invariant 7 exists because of it.
 
 ## 6. Data architecture
 
-```mermaid
-erDiagram
-    OPERATOR ||--o{ AGENT : registers
-    AGENT ||--o{ STAKE : posts
-    REQUESTER ||--o{ TASK : submits
-    TASK ||--|| PREDICATE : carries
-    TASK }o--|| CATEGORY : "belongs to"
-    TASK ||--o| ESCROW : "is funded by"
-    AGENT ||--o{ TASK : "is assigned"
-    TASK ||--o| RECEIPT : yields
-    RECEIPT ||--|{ STEP : "chains"
-    RECEIPT ||--|| ATTESTATION : "is bound to"
-    RECEIPT }o--o| BATCH : "is committed in"
-    RECEIPT ||--o{ AUDIT : "is audited by"
-    RECEIPT ||--o{ CHALLENGE : "is disputed by"
-    AGENT ||--o{ POSTERIOR : "has one per category"
-    CATEGORY ||--o{ POSTERIOR : scopes
-```
+![Data architecture — entities and relationships](diagrams/hld/04-data-architecture.png)
 
 ### 6.1 What lives where (paper §4.4)
 
@@ -416,61 +320,11 @@ ratio (paper §8.4).
 
 ### 7.1 Staked-tier task, end to end
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant R as Requester
-    participant CP as Control plane
-    participant CH as Chain
-    participant RT as Attested runtime
-    participant ST as Receipt store
-    participant V as Validator
-    participant RP as Reputation
-
-    R->>CP: Submit task (goal, predicate, budget, category)
-    CP->>CP: Validate the predicate, check tier and value cap
-    CP->>CH: Lock escrow V and encumber agent stake S
-    CP->>RT: Dispatch to selected agent
-    RT->>RT: Execute, meter and hash-chain every step
-    RT->>R: Signed pre-commitment
-    RT->>ST: Receipt body (encrypted)
-    RT->>CH: Commit root, terminal hash, attestation reference
-    alt audit drawn with probability p
-        V->>ST: Request evidence set and Merkle paths
-        V->>V: Check attestation, commitment, evidence against the predicate
-        V->>CH: Record verdict
-    end
-    CH->>R: Release to agent, or refund
-    CH->>RP: Validated outcome and metered cost
-    RP->>RP: Update posteriors for the agent and category
-```
+![Staked-tier task, end to end](diagrams/hld/05-staked-task-flow.png)
 
 ### 7.2 Task state machine
 
-```mermaid
-stateDiagram-v2
-    [*] --> Submitted
-    Submitted --> Rejected: predicate missing or too weak
-    Submitted --> Escrowed: V locked, stake encumbered
-    Escrowed --> Running: agent routed
-    Running --> Receipted: receipt emitted and committed
-    Running --> Failed: no receipt, deadline passed, or crash
-    Receipted --> AuditedPass: audit drawn and passed
-    Receipted --> Refunded: audit drawn and failed
-    Receipted --> Held: no audit drawn
-    AuditedPass --> Released: escrow released to agent
-    Released --> Window: stake still encumbered
-    Held --> Final: window expired, escrow released
-    Held --> Challenged: challenge posted before release
-    Window --> Final: window expired
-    Window --> Challenged: challenge posted after release
-    Challenged --> Final: challenge rejected
-    Challenged --> Refunded: challenge upheld
-    Failed --> Refunded
-    Rejected --> [*]
-    Refunded --> [*]
-    Final --> [*]
-```
+![Task state machine](diagrams/hld/06-task-state-machine.png)
 
 Two release paths exist and they differ. A receipt that **passes an audit** releases at once, and the
 dispute window then runs *after* release, so a late challenge claws back from stake (paper §10.4). A
@@ -480,29 +334,7 @@ follows §10.1 and lists the wording difference as defect 3 in §14.
 
 ### 7.3 Challenge and clawback
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant X as Challenger
-    participant CH as ChallengeManager
-    participant ST as Receipt store
-    participant AD as Adjudication
-    participant R as Requester
-
-    X->>CH: Post bond b, name how the receipt fails to substantiate the predicate
-    CH->>ST: Compel Level 2 disclosure
-    ST->>AD: Full trajectory with Merkle paths to the committed root
-    AD->>AD: Check chain, attestation, evidence against the predicate
-    alt challenge upheld
-        AD->>CH: Verdict: receipt false
-        CH->>R: Refund V and attributable wasted cost
-        CH->>X: Return bond plus reward
-        CH->>CH: Remainder to the residual-loss reserve
-    else challenge rejected
-        AD->>CH: Verdict: receipt stands
-        CH->>CH: Bond forfeit, partly to the agent, partly to adjudication cost
-    end
-```
+![Challenge and clawback](diagrams/hld/07-challenge-and-clawback.png)
 
 Slashed stake follows a fixed order: requester made whole, challenger rewarded, remainder to the
 residual-loss reserve rather than burned (paper §10.3). **Who plays "Adjudication" at v1 is not
@@ -582,6 +414,8 @@ and what measurement starts.
 **P0 can run on modest hardware, and P1 cannot.** A laptop or a small server is enough to build and
 test the receipt format, the hash chain and the verifier. Anything involving attestation needs
 hardware that supports it, so that cost starts at P1 and should be priced from a spike, not assumed.
+
+![Delivery by phase P0–P5, and the open decisions D1–D16 from §11.3 each phase blocks on](diagrams/hld/08-phases-and-decisions.png)
 
 ### 9.1 Environments
 
@@ -820,6 +654,71 @@ Found while preparing this document. Each is a defect in the document named, not
 | **Quote** | The vendor-signed attestation binding a measurement to an enclave key |
 | **Window `W`** | The period during which a receipt can be challenged |
 | **Onboarding tier / staked tier** | Faucet-funded, fully audited, no transferable reputation / stake-backed, sampled audit, reputation accrues |
+
+## 16. Orchestrator implementation track
+
+**Status:** Proposed. This section is the implementation plan for C4 (task service), C5 (predicate
+service), C7 (router) and the C10–C13 runtime, written by the engineer building that track. It is
+downstream of §4 and §9 above: where it repeats a decision already locked there, that decision
+wins. New text here is **Proposed**, in the sense §1 defines, until it lands in §11.
+
+### 16.1 Architecture
+
+![Orchestrator architecture: surfaces, control plane, orchestration, execution runtime, trust core, data](diagrams/orchestrator/01-architecture.png)
+
+Maps onto the layers of §4: Surfaces = C1–C2, Orchestration = C4 (task service) and C7 (router),
+Execution runtime = C10–C13, Trust core = the receipt builder inside C11 plus C16's predicate
+checks. `Limits + backpressure`, `Policy check` and `Outbox` are additions this track needs that
+are not yet components in §4 — they belong inside C6, C13 and C10 respectively.
+
+### 16.2 Run workflow
+
+![Run workflow: one goal from intake to a settled PR, including the validator loop and INCONCLUSIVE path](diagrams/orchestrator/02-workflow.png)
+
+One run is a DAG of tasks (§16 extends the data model of §6: `RUN 1:N TASK`, each task still
+carries one `Φ` as in §6's `TASK ||--|| PREDICATE`). Every transition is an event in Postgres, so a
+crashed worker resumes from the log rather than from in-memory state — this is the proposed answer
+to **D7** (§11.3), open in the paper. `INCONCLUSIVE` is a third predicate outcome, alongside pass
+and fail, that never updates reputation (extends invariant 4, Appendix B).
+
+### 16.3 Decisions and build order
+
+![Seventeen orchestrator-level decisions D1–D17, and the build order M0–M6](diagrams/orchestrator/03-decisions-and-build-order.png)
+
+These are implementation-level decisions underneath the ones in §11 — D1–D17 here are a separate,
+lower-level list from the D1–D16 in §11.3 and should not be confused with them. Where the two
+overlap (D2 here vs. D4 in §11.3 on language; D10 here vs. D2 in §11.3 on TEE/chain), §11.3 governs.
+
+### 16.4 Request flow
+
+![Request flow HLD: one goal through the orchestrator to a validated, merged PR, numbered end to end](diagrams/orchestrator/04-request-flow-hld.png)
+
+The orchestrator-only walkthrough of the sequence in §7.1, with the service names this track plans
+to build rather than the component ids of §4.
+
+### 16.5 Where this plugs into the rest of the system
+
+![Mapping of the orchestrator's components onto the HLD's seven layers, by owner](diagrams/orchestrator/05-plug-in-map.png)
+
+Colour is ownership, not trust. The execution layer (C10–C13) stays the trusted computing base of
+§5 regardless of who writes the code in it — the dashed boxes (Planner agent, Approvals) are new
+components this track adds inside C4/C5 that §4 does not yet name.
+
+![End-to-end sequence: the orchestrator's run loop inside the staked-tier task flow of §7.1](diagrams/orchestrator/06-end-to-end-with-trust-layer.png)
+
+This is §7.1's sequence run once per DAG node instead of once per task, with the phase tag from §9
+marking where each step turns on.
+
+### 16.6 Changes and open questions against this HLD
+
+![Three columns: adopted from this HLD, added to it, and open questions to resolve together](diagrams/orchestrator/07-integration-changes-and-open-questions.png)
+
+The left column is this track's plan changing to match §4–§7. The middle column is a gap in this
+HLD that the orchestrator needs filled (run-level DAG, attempts, `INCONCLUSIVE`, D7). The right
+column needs a decision before P0 can lock: D4 (language — §11.2 Pr4 proposes Rust for the runtime
+and receipt builder; this track's current plan is Python behind `spec/` and its test vectors, with
+the receipt builder and signer moving to Rust at P1 if the TCB needs it), escrow granularity per
+task vs. per run, and ownership of C14 and C16.
 
 ---
 
