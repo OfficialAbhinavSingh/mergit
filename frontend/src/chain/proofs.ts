@@ -7,6 +7,9 @@ import { blockRanges } from "./ranges";
 /** Largest block range per getLogs call; public Base RPCs refuse larger ones. */
 const PAGE = 2000n;
 
+/** Below this width, a page that still fails is given up on rather than split further. */
+const MIN_PAGE = 50n;
+
 export type Commitment = {
   taskId: Hex;
   agentId: bigint;
@@ -17,11 +20,14 @@ export type Commitment = {
   tx: Hash;
 };
 
-/** Every receipt committed on chain, newest first, read in pages. */
-export async function listCommitments(): Promise<Commitment[]> {
-  const latest = await publicClient.getBlockNumber();
-  const out: Commitment[] = [];
-  for (const [fromBlock, toBlock] of blockRanges(LIVE.deployBlock, latest, PAGE)) {
+/**
+ * One page's commitments. The public RPC caps `eth_getLogs` by response size, not just block count, so
+ * even a PAGE-sized range can still be refused (413) when it happens to be log-dense. On failure, split
+ * the range in half and retry each half; a page that still fails once it can no longer be split is
+ * skipped and logged, so one bad slice doesn't take down every receipt in every other page.
+ */
+async function fetchPage(fromBlock: bigint, toBlock: bigint): Promise<Commitment[]> {
+  try {
     const logs = await publicClient.getContractEvents({
       address: LIVE.contracts.registry,
       abi: receiptRegistryAbi,
@@ -29,17 +35,32 @@ export async function listCommitments(): Promise<Commitment[]> {
       fromBlock,
       toBlock,
     });
-    for (const l of logs) {
-      out.push({
-        taskId: l.args.taskId as Hex,
-        agentId: l.args.agentId as bigint,
-        root: l.args.root as Hex,
-        bodyHash: l.args.bodyHash as Hex,
-        costMicros: l.args.costMicros as bigint,
-        blockNumber: l.blockNumber,
-        tx: l.transactionHash,
-      });
+    return logs.map((l) => ({
+      taskId: l.args.taskId as Hex,
+      agentId: l.args.agentId as bigint,
+      root: l.args.root as Hex,
+      bodyHash: l.args.bodyHash as Hex,
+      costMicros: l.args.costMicros as bigint,
+      blockNumber: l.blockNumber,
+      tx: l.transactionHash,
+    }));
+  } catch (err) {
+    if (toBlock - fromBlock < MIN_PAGE) {
+      console.warn(`listCommitments: giving up on blocks ${fromBlock}-${toBlock}`, err);
+      return [];
     }
+    const mid = fromBlock + (toBlock - fromBlock) / 2n;
+    const [left, right] = await Promise.all([fetchPage(fromBlock, mid), fetchPage(mid + 1n, toBlock)]);
+    return [...left, ...right];
+  }
+}
+
+/** Every receipt committed on chain, newest first, read in pages. */
+export async function listCommitments(): Promise<Commitment[]> {
+  const latest = await publicClient.getBlockNumber();
+  const out: Commitment[] = [];
+  for (const [fromBlock, toBlock] of blockRanges(LIVE.deployBlock, latest, PAGE)) {
+    out.push(...(await fetchPage(fromBlock, toBlock)));
   }
   return out.reverse();
 }
